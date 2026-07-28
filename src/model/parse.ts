@@ -61,8 +61,17 @@ export function parseTaskLine(raw: string): ParsedTask | null {
 }
 
 /** Build a fresh task line the way Tasks Plus writes them. */
-export function buildTaskLine(title: string, due: string | null): string {
-	return due ? `- [ ] ${title} \u{1F4C5} ${due}` : `- [ ] ${title}`;
+export function buildTaskLine(
+	title: string,
+	due: string | null,
+	starred = false,
+	someday = false
+): string {
+	let line = `- [ ] ${title}`;
+	if (starred) line += " \u{2B50}";
+	else if (someday) line += " \u{1F4A4}";
+	if (due) line += ` \u{1F4C5} ${due}`;
+	return line;
 }
 
 export function setLineChecked(raw: string, checked: boolean, doneISO: string): string | null {
@@ -90,21 +99,30 @@ export function setLineDue(raw: string, due: string | null): string | null {
 	return `${prefix} ${text}`.replace(/\s+$/, "");
 }
 
-function toggleMarker(raw: string, markerRe: RegExp, marker: string): string | null {
+/** Star and someday are mutually exclusive — adding one clears the other. */
+function toggleMarker(
+	raw: string,
+	markerRe: RegExp,
+	marker: string,
+	otherRe: RegExp
+): string | null {
 	const m = LINE_RE.exec(raw);
 	if (!m) return null;
 	const prefix = `${m[1] ?? ""}${m[2] ?? "-"} [${m[3] ?? " "}]`;
 	let text = m[4] ?? "";
-	text = markerRe.test(text)
-		? text.replace(new RegExp(` ?${markerRe.source}`, "u"), "")
-		: `${text.replace(/\s+$/, "")} ${marker}`;
+	if (markerRe.test(text)) {
+		text = text.replace(new RegExp(` ?${markerRe.source}`, "u"), "");
+	} else {
+		text = text.replace(new RegExp(` ?${otherRe.source}`, "u"), "");
+		text = `${text.replace(/\s+$/, "")} ${marker}`;
+	}
 	return `${prefix} ${text}`.replace(/\s+$/, "");
 }
 
 export function toggleLineStar(raw: string): string | null {
-	return toggleMarker(raw, STAR_RE, "\u{2B50}");
+	return toggleMarker(raw, STAR_RE, "\u{2B50}", SOMEDAY_RE);
 }
 
 export function toggleLineSomeday(raw: string): string | null {
-	return toggleMarker(raw, SOMEDAY_RE, "\u{1F4A4}");
+	return toggleMarker(raw, SOMEDAY_RE, "\u{1F4A4}", STAR_RE);
 }

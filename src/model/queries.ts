@@ -41,45 +41,35 @@ export function effectiveDate(t: TaskItem): string | null {
 	return t.due ?? t.scheduled;
 }
 
+/**
+ * Every task lives in exactly one view. Precedence for open tasks:
+ * someday > starred (Today) > date (Today/Upcoming) > Inbox/Anytime.
+ * An Inbox task with a date or marker has been triaged — it leaves Inbox.
+ */
+export function primaryView(t: TaskItem, today: string): ViewId | null {
+	if (t.checked) return t.doneDate !== null ? "logbook" : null;
+	if (t.someday) return "someday";
+	if (t.starred) return "today";
+	const d = effectiveDate(t);
+	if (d !== null) return d <= today ? "today" : "upcoming";
+	return t.location === "inbox" ? "inbox" : "anytime";
+}
+
 export function tasksFor(view: ViewId, all: TaskItem[], today: string): TaskItem[] {
+	const tasks = all.filter((t) => primaryView(t, today) === view);
 	switch (view) {
-		case "inbox":
-			return all.filter((t) => !t.checked && t.location === "inbox");
 		case "today":
-			return all
-				.filter((t) => !t.checked && !t.someday)
-				.filter((t) => {
-					const d = effectiveDate(t);
-					return t.starred || (d !== null && d <= today);
-				})
-				.sort(byEffectiveDate);
 		case "upcoming":
-			return all
-				.filter((t) => !t.checked && !t.someday)
-				.filter((t) => {
-					const d = effectiveDate(t);
-					return d !== null && d > today;
-				})
-				.sort(byEffectiveDate);
-		case "anytime":
-			return all.filter(
-				(t) =>
-					!t.checked &&
-					!t.someday &&
-					t.location !== "inbox" &&
-					effectiveDate(t) === null
-			);
-		case "someday":
-			return all.filter((t) => !t.checked && t.someday);
+			return tasks.sort(byEffectiveDate);
 		case "logbook":
-			return all
-				.filter((t) => t.checked && t.doneDate !== null)
-				.sort(
-					(a, b) =>
-						(b.doneDate ?? "").localeCompare(a.doneDate ?? "") ||
-						a.path.localeCompare(b.path) ||
-						a.line - b.line
-				);
+			return tasks.sort(
+				(a, b) =>
+					(b.doneDate ?? "").localeCompare(a.doneDate ?? "") ||
+					a.path.localeCompare(b.path) ||
+					a.line - b.line
+			);
+		default:
+			return tasks;
 	}
 }
 
