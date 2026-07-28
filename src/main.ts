@@ -1,14 +1,27 @@
-import { Notice, ObsidianProtocolData, Plugin, WorkspaceLeaf } from "obsidian";
+import {
+	Notice,
+	ObsidianProtocolData,
+	Plugin,
+	WorkspaceLeaf,
+	debounce,
+} from "obsidian";
 import { PLUGIN_NAME, RIBBON_ICON, VIEW_TYPE_TASKS_PLUS } from "./constants";
 import { DEFAULT_SETTINGS, TasksPlusSettings } from "./settings";
 import { TaskIndex } from "./model/index";
 import { CaptureModal, captureToInbox } from "./capture/modal";
 import { TasksPlusView } from "./views/leaf";
+import { updateDailyNote } from "./notes/daily-note";
 import { formatHuman } from "./util/date";
 
 export default class TasksPlusPlugin extends Plugin {
 	settings!: TasksPlusSettings;
 	index!: TaskIndex;
+
+	private dailyNoteRefresh = debounce(
+		() => void this.refreshDailyNote(),
+		2000,
+		true
+	);
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
@@ -58,9 +71,20 @@ export default class TasksPlusPlugin extends Plugin {
 		this.registerObsidianProtocolHandler("tasks-plus/capture", uriCapture);
 		this.registerObsidianProtocolHandler("tasks-plus", uriCapture);
 
+		this.index.onChange(() => this.dailyNoteRefresh());
+
 		this.app.workspace.onLayoutReady(() => {
 			void this.index.rebuildAll();
 		});
+	}
+
+	async refreshDailyNote(): Promise<void> {
+		if (!this.settings.dailyNoteBlock) return;
+		try {
+			await updateDailyNote(this.app, this.index.all());
+		} catch (e) {
+			console.warn("[Tasks Plus] daily note update failed", e);
+		}
 	}
 
 	async activateView(asTab: boolean): Promise<void> {
