@@ -23,6 +23,14 @@ export default tseslint.config(
 		},
 	},
 	...obsidianmd.configs.recommended,
+	{
+		// minAppVersion 1.7.2 predates the declarative settings renderer, so
+		// the tab must still implement the deprecated display().
+		files: ["src/settings-tab.ts"],
+		rules: {
+			"@typescript-eslint/no-deprecated": "off",
+		},
+	},
 	globalIgnores([
 		"node_modules",
 		"dist",

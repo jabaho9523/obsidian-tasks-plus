@@ -7,6 +7,7 @@ import {
 } from "obsidian";
 import { PLUGIN_NAME, RIBBON_ICON, VIEW_TYPE_TASKS_PLUS } from "./constants";
 import { DEFAULT_SETTINGS, TasksPlusSettings } from "./settings";
+import { TasksPlusSettingTab } from "./settings-tab";
 import { TaskIndex } from "./model/index";
 import { CaptureModal, captureToInbox } from "./capture/modal";
 import { TasksPlusView } from "./views/leaf";
@@ -70,6 +71,8 @@ export default class TasksPlusPlugin extends Plugin {
 		};
 		this.registerObsidianProtocolHandler("tasks-plus/capture", uriCapture);
 		this.registerObsidianProtocolHandler("tasks-plus", uriCapture);
+
+		this.addSettingTab(new TasksPlusSettingTab(this.app, this));
 
 		this.index.onChange(() => this.dailyNoteRefresh());
 

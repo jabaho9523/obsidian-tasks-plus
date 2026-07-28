@@ -12,3 +12,6 @@ export const MARKER_STAR = "⭐";
 export const MARKER_SOMEDAY = "💤";
 
 export const INBOX_BASENAME = "Inbox";
+
+export const CAPTURE_URI_EXAMPLE =
+	"obsidian://tasks-plus/capture?text=Call%20mom%20tomorrow";

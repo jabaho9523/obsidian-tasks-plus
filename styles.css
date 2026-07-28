@@ -361,3 +361,12 @@
 	gap: 8px;
 	color: var(--text-muted);
 }
+
+/* Settings */
+
+.tasks-plus-capture-uri {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-top: 6px;
+}
