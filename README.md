@@ -12,7 +12,7 @@ This is v0.1.0, the first milestone. It's the native core: views, capture, dates
 - **Natural-language dates** — today, tomorrow, fri, next mon, next week, in 2w, 2026-08-15. A small hand-rolled parser, no heavy dependency.
 - **Tasks stay markdown** — every task is an ordinary `- [ ]` checkbox in a note. Completing one checks the box and appends the done date in place. Nothing moves, nothing is copied into a database. Delete the plugin and you lose nothing.
 - **The vault is the app** — folders under your Tasks folder are areas, notes are projects. Any checkbox anywhere in the vault shows up too (toggleable), and editing it always writes back to its source line only.
-- **Tags as cross-note grouping** — write an ordinary `#tag` inside any task and it shows up in a Tags section in the rail. Click one (or several — selection narrows) to see every tagged task across the vault, grouped under collapsible Inbox/Today/Upcoming/Anytime/Someday/Logbook headers, each row still linking to its source note.
+- **Tags as cross-note grouping** — write an ordinary `#tag` inside any task (or use the tag button / `g`) and it shows up in a Tags section in the rail. Click one or several (selection is a union) to see every tagged task across the vault, grouped under collapsible Inbox/Today/Upcoming/Anytime/Someday/Logbook headers, each row still linking to its source note.
 - **Daily-note block** (optional, off by default) — a managed block in today's daily note listing what's due today.
 
 ## How tasks are stored
@@ -41,7 +41,9 @@ Every open task lives in exactly one view (someday wins over starred, starred ov
 - **Someday** — marked 💤; resting until you wake it.
 - **Logbook** — done tasks, newest first, grouped by day.
 
-Keyboard, in any view: `j`/`k` navigate, `x` toggle done, `t` star, `s` schedule, `d` deadline, `m` move, `Enter` open the source note. In the capture modal: `⌘T` star, `⌘S` someday — no mouse needed anywhere.
+Keyboard, in any view: `j`/`k` navigate, `x` toggle done, `t` star, `s` schedule, `d` deadline, `g` tag, `Enter` open the source note. In the capture modal: `⌘T` star, `⌘S` someday — no mouse needed anywhere.
+
+Row action buttons stay visible in Inbox for quick sorting; in every other view they appear on hover (or on tap, on phone and tablet).
 
 ## Settings
 

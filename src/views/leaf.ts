@@ -310,6 +310,9 @@ export class TasksPlusView extends ItemView {
 		});
 
 		const list = content.createDiv({ cls: "tasks-plus-list" });
+		if (this.selection.kind === "view" && this.selection.view === "inbox") {
+			list.addClass("is-inbox");
+		}
 		if (groups !== null) {
 			if (groups.length === 0) {
 				list.createDiv({
