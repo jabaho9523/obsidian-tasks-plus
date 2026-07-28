@@ -1,8 +1,9 @@
-import { Notice, ObsidianProtocolData, Plugin } from "obsidian";
-import { PLUGIN_NAME } from "./constants";
+import { Notice, ObsidianProtocolData, Plugin, WorkspaceLeaf } from "obsidian";
+import { PLUGIN_NAME, RIBBON_ICON, VIEW_TYPE_TASKS_PLUS } from "./constants";
 import { DEFAULT_SETTINGS, TasksPlusSettings } from "./settings";
 import { TaskIndex } from "./model/index";
 import { CaptureModal, captureToInbox } from "./capture/modal";
+import { TasksPlusView } from "./views/leaf";
 import { formatHuman } from "./util/date";
 
 export default class TasksPlusPlugin extends Plugin {
@@ -15,11 +16,36 @@ export default class TasksPlusPlugin extends Plugin {
 		this.index = new TaskIndex(this.app, () => this.settings);
 		this.index.register(this);
 
+		this.registerView(
+			VIEW_TYPE_TASKS_PLUS,
+			(leaf: WorkspaceLeaf) => new TasksPlusView(leaf, this)
+		);
+
+		this.addRibbonIcon(RIBBON_ICON, `Open ${PLUGIN_NAME}`, () => {
+			void this.activateView(false);
+		});
+
 		this.addCommand({
 			id: "quick-capture",
 			name: "Quick capture",
 			callback: () => {
 				new CaptureModal(this.app, this.settings).open();
+			},
+		});
+
+		this.addCommand({
+			id: "open-sidebar",
+			name: "Open in sidebar",
+			callback: () => {
+				void this.activateView(false);
+			},
+		});
+
+		this.addCommand({
+			id: "open-tab",
+			name: "Open as tab",
+			callback: () => {
+				void this.activateView(true);
 			},
 		});
 
@@ -35,6 +61,21 @@ export default class TasksPlusPlugin extends Plugin {
 		this.app.workspace.onLayoutReady(() => {
 			void this.index.rebuildAll();
 		});
+	}
+
+	async activateView(asTab: boolean): Promise<void> {
+		const { workspace } = this.app;
+		const existing = workspace.getLeavesOfType(VIEW_TYPE_TASKS_PLUS);
+		const first = existing[0];
+		if (first) {
+			void workspace.revealLeaf(first);
+			return;
+		}
+		const leaf = asTab
+			? workspace.getLeaf(true)
+			: (workspace.getRightLeaf(false) ?? workspace.getLeaf(true));
+		await leaf.setViewState({ type: VIEW_TYPE_TASKS_PLUS, active: true });
+		void workspace.revealLeaf(leaf);
 	}
 
 	private async captureFromUri(text: string): Promise<void> {
