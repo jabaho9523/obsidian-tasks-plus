@@ -12,6 +12,7 @@ This is v0.1.0, the first milestone. It's the native core: views, capture, dates
 - **Natural-language dates** — today, tomorrow, fri, next mon, next week, in 2w, 2026-08-15. A small hand-rolled parser, no heavy dependency.
 - **Tasks stay markdown** — every task is an ordinary `- [ ]` checkbox in a note. Completing one checks the box and appends the done date in place. Nothing moves, nothing is copied into a database. Delete the plugin and you lose nothing.
 - **The vault is the app** — folders under your Tasks folder are areas, notes are projects. Any checkbox anywhere in the vault shows up too (toggleable), and editing it always writes back to its source line only.
+- **Tags as cross-note grouping** — write an ordinary `#tag` inside any task and it shows up in a Tags section in the rail. Click one (or several — selection narrows) to see every tagged task across the vault, grouped under collapsible Inbox/Today/Upcoming/Anytime/Someday/Logbook headers, each row still linking to its source note.
 - **Daily-note block** (optional, off by default) — a managed block in today's daily note listing what's due today.
 
 ## How tasks are stored
