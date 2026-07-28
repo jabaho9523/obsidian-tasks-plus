@@ -72,42 +72,69 @@ const MATCHERS: Matcher[] = [
 	},
 ];
 
+interface Found {
+	start: number;
+	end: number;
+	date: Date;
+}
+
+const DEADLINE_PREFIX_RE = /\b(?:by|deadline)\s*$/i;
+const ANY_PREFIX_RE = /\b(?:on|due|by|deadline)\s*$/i;
+
 /**
- * Pull a date out of free text. The last date-like phrase wins
- * ("call mom tomorrow" → title "call mom", due tomorrow); a leading
- * "on"/"due" is cleaned away with it, while a leading "by"/"deadline"
- * makes it a deadline instead ("report by fri" → deadline Friday).
+ * Pull dates out of free text. A phrase led by "by"/"deadline" becomes
+ * the deadline; the last remaining phrase becomes the due date — both
+ * can appear in one capture ("version test by fri in 2w"). Matched
+ * phrases and their lead-in words are stripped from the title.
  */
 export function parseNaturalDate(
 	input: string,
 	firstDayOfWeek: number,
 	now: Date = new Date()
 ): NLResult {
-	let best: { start: number; end: number; date: Date } | null = null;
+	const found: Found[] = [];
 	for (const matcher of MATCHERS) {
 		matcher.re.lastIndex = 0;
 		let m: RegExpExecArray | null;
 		while ((m = matcher.re.exec(input)) !== null) {
 			const date = matcher.resolve(m, now, firstDayOfWeek);
 			if (!date) continue;
-			if (!best || m.index > best.start) {
-				best = { start: m.index, end: m.index + m[0].length, date };
-			}
+			found.push({ start: m.index, end: m.index + m[0].length, date });
 		}
 	}
-	if (!best) {
+	found.sort((a, b) => a.start - b.start);
+
+	let deadline: Found | null = null;
+	for (const f of found) {
+		if (DEADLINE_PREFIX_RE.test(input.slice(0, f.start))) deadline = f;
+	}
+	let due: Found | null = null;
+	for (const f of found) {
+		if (deadline && f.start < deadline.end && f.end > deadline.start) continue;
+		if (DEADLINE_PREFIX_RE.test(input.slice(0, f.start))) continue;
+		due = f;
+	}
+
+	if (!deadline && !due) {
 		return { title: cleanTitle(input), due: null, deadline: null, phrase: null };
 	}
-	const rawBefore = input.slice(0, best.start);
-	const isDeadline = /\b(?:by|deadline)\s*$/i.test(rawBefore);
-	const before = rawBefore.replace(/\b(?:on|due|by|deadline)\s*$/i, "");
-	const after = input.slice(best.end);
-	const iso = toISO(best.date);
+
+	// Strip right-to-left so earlier spans keep their indices.
+	const spans = [deadline, due]
+		.filter((s): s is Found => s !== null)
+		.sort((a, b) => b.start - a.start);
+	let title = input;
+	for (const s of spans) {
+		const before = title.slice(0, s.start).replace(ANY_PREFIX_RE, "");
+		title = `${before} ${title.slice(s.end)}`;
+	}
+
+	const last = due && (!deadline || due.start > deadline.start) ? due : deadline;
 	return {
-		title: cleanTitle(`${before} ${after}`),
-		due: isDeadline ? null : iso,
-		deadline: isDeadline ? iso : null,
-		phrase: input.slice(best.start, best.end),
+		title: cleanTitle(title),
+		due: due ? toISO(due.date) : null,
+		deadline: deadline ? toISO(deadline.date) : null,
+		phrase: last ? input.slice(last.start, last.end) : null,
 	};
 }
 
