@@ -3,6 +3,8 @@ import { addDays, addMonths, toISO, weekdayIndex } from "../util/date";
 export interface NLResult {
 	title: string;
 	due: string | null;
+	/** Set instead of due when the phrase was led by "by"/"deadline". */
+	deadline: string | null;
 	/** The exact phrase that was read as a date, for preview UI. */
 	phrase: string | null;
 }
@@ -71,9 +73,10 @@ const MATCHERS: Matcher[] = [
 ];
 
 /**
- * Pull a due date out of free text. The last date-like phrase wins
+ * Pull a date out of free text. The last date-like phrase wins
  * ("call mom tomorrow" → title "call mom", due tomorrow); a leading
- * "on"/"due"/"by" before the phrase is cleaned away with it.
+ * "on"/"due" is cleaned away with it, while a leading "by"/"deadline"
+ * makes it a deadline instead ("report by fri" → deadline Friday).
  */
 export function parseNaturalDate(
 	input: string,
@@ -93,15 +96,17 @@ export function parseNaturalDate(
 		}
 	}
 	if (!best) {
-		return { title: cleanTitle(input), due: null, phrase: null };
+		return { title: cleanTitle(input), due: null, deadline: null, phrase: null };
 	}
-	const before = input
-		.slice(0, best.start)
-		.replace(/\b(?:on|due|by)\s*$/i, "");
+	const rawBefore = input.slice(0, best.start);
+	const isDeadline = /\b(?:by|deadline)\s*$/i.test(rawBefore);
+	const before = rawBefore.replace(/\b(?:on|due|by|deadline)\s*$/i, "");
 	const after = input.slice(best.end);
+	const iso = toISO(best.date);
 	return {
 		title: cleanTitle(`${before} ${after}`),
-		due: toISO(best.date),
+		due: isDeadline ? null : iso,
+		deadline: isDeadline ? iso : null,
 		phrase: input.slice(best.start, best.end),
 	};
 }

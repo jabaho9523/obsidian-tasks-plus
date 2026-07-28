@@ -1,11 +1,12 @@
 import { setIcon } from "obsidian";
 import { TaskItem } from "../model/index";
-import { formatHuman } from "../util/date";
+import { daysBetween, formatHuman } from "../util/date";
 
 export interface RowCallbacks {
 	onToggle: (task: TaskItem) => void;
 	onStar: (task: TaskItem) => void;
 	onSchedule: (task: TaskItem) => void;
+	onDeadline: (task: TaskItem) => void;
 	onSomeday: (task: TaskItem) => void;
 	onMove: (task: TaskItem) => void;
 	onJump: (task: TaskItem) => void;
@@ -60,6 +61,15 @@ export function renderTaskRow(
 		setIcon(icon, task.checked ? "check" : "calendar");
 		chip.createSpan({ text: formatHuman(date, opts.today) });
 	}
+	if (!task.checked && task.deadline) {
+		const chip = meta.createSpan({
+			cls: "tasks-plus-date-chip is-deadline",
+		});
+		if (daysBetween(opts.today, task.deadline) <= 3) chip.addClass("is-urgent");
+		const icon = chip.createSpan({ cls: "tasks-plus-chip-icon" });
+		setIcon(icon, "alarm-clock");
+		chip.createSpan({ text: formatHuman(task.deadline, opts.today) });
+	}
 	if (opts.showSource) {
 		const source = meta.createSpan({
 			cls: "tasks-plus-row-source",
@@ -77,6 +87,9 @@ export function renderTaskRow(
 		cb.onStar(task)
 	);
 	actionButton(actions, "calendar", "Set date", () => cb.onSchedule(task));
+	actionButton(actions, "alarm-clock", "Set deadline", () =>
+		cb.onDeadline(task)
+	);
 	actionButton(
 		actions,
 		"moon",

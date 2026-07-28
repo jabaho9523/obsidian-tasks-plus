@@ -8,7 +8,8 @@ export class DateModal extends Modal {
 		app: App,
 		private current: string | null,
 		private firstDayOfWeek: number,
-		private onPick: (iso: string | null) => void
+		private onPick: (iso: string | null) => void,
+		private title = "When?"
 	) {
 		super(app);
 	}
@@ -17,7 +18,7 @@ export class DateModal extends Modal {
 		this.modalEl.addClass("tasks-plus-date-modal");
 		const { contentEl } = this;
 		contentEl.empty();
-		this.setTitle("When?");
+		this.setTitle(this.title);
 
 		const quick = contentEl.createDiv({ cls: "tasks-plus-date-quick" });
 		this.quickButton(quick, "Today", todayISO());

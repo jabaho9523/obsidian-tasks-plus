@@ -1,5 +1,6 @@
 const DUE_RE = /\u{1F4C5}️?\s*(\d{4}-\d{2}-\d{2})/u;
 const SCHEDULED_RE = /\u{23F3}️?\s*(\d{4}-\d{2}-\d{2})/u;
+const DEADLINE_RE = /\u{23F0}️?\s*(\d{4}-\d{2}-\d{2})/u;
 const DONE_RE = /\u{2705}️?\s*(\d{4}-\d{2}-\d{2})/u;
 const STAR_RE = /\u{2B50}️?/u;
 const SOMEDAY_RE = /\u{1F4A4}️?/u;
@@ -17,6 +18,7 @@ export interface ParsedTask {
 	title: string;
 	due: string | null;
 	scheduled: string | null;
+	deadline: string | null;
 	doneDate: string | null;
 	starred: boolean;
 	someday: boolean;
@@ -32,6 +34,7 @@ export function parseTaskLine(raw: string): ParsedTask | null {
 
 	const due = DUE_RE.exec(text)?.[1] ?? null;
 	const scheduled = SCHEDULED_RE.exec(text)?.[1] ?? null;
+	const deadline = DEADLINE_RE.exec(text)?.[1] ?? null;
 	const doneDate = DONE_RE.exec(text)?.[1] ?? null;
 	const starred = STAR_RE.test(text);
 	const someday = SOMEDAY_RE.test(text);
@@ -39,6 +42,7 @@ export function parseTaskLine(raw: string): ParsedTask | null {
 	const title = text
 		.replace(new RegExp(` ?${DUE_RE.source}`, "u"), "")
 		.replace(new RegExp(` ?${SCHEDULED_RE.source}`, "u"), "")
+		.replace(new RegExp(` ?${DEADLINE_RE.source}`, "u"), "")
 		.replace(new RegExp(` ?${DONE_RE.source}`, "u"), "")
 		.replace(new RegExp(` ?${STAR_RE.source}`, "u"), "")
 		.replace(new RegExp(` ?${SOMEDAY_RE.source}`, "u"), "")
@@ -54,6 +58,7 @@ export function parseTaskLine(raw: string): ParsedTask | null {
 		title,
 		due,
 		scheduled,
+		deadline,
 		doneDate,
 		starred,
 		someday,
@@ -65,12 +70,14 @@ export function buildTaskLine(
 	title: string,
 	due: string | null,
 	starred = false,
-	someday = false
+	someday = false,
+	deadline: string | null = null
 ): string {
 	let line = `- [ ] ${title}`;
 	if (starred) line += " \u{2B50}";
 	else if (someday) line += " \u{1F4A4}";
 	if (due) line += ` \u{1F4C5} ${due}`;
+	if (deadline) line += ` \u{23F0} ${deadline}`;
 	return line;
 }
 
@@ -84,19 +91,32 @@ export function setLineChecked(raw: string, checked: boolean, doneISO: string): 
 	return `${prefix} ${text}`.replace(/\s+$/, "");
 }
 
-export function setLineDue(raw: string, due: string | null): string | null {
+function setLineDate(
+	raw: string,
+	dateRe: RegExp,
+	emoji: string,
+	date: string | null
+): string | null {
 	const m = LINE_RE.exec(raw);
 	if (!m) return null;
 	const prefix = `${m[1] ?? ""}${m[2] ?? "-"} [${m[3] ?? " "}]`;
 	let text = m[4] ?? "";
-	if (DUE_RE.test(text)) {
-		text = due
-			? text.replace(DUE_RE, `\u{1F4C5} ${due}`)
-			: text.replace(new RegExp(` ?${DUE_RE.source}`, "u"), "");
-	} else if (due) {
-		text = `${text.replace(/\s+$/, "")} \u{1F4C5} ${due}`;
+	if (dateRe.test(text)) {
+		text = date
+			? text.replace(dateRe, `${emoji} ${date}`)
+			: text.replace(new RegExp(` ?${dateRe.source}`, "u"), "");
+	} else if (date) {
+		text = `${text.replace(/\s+$/, "")} ${emoji} ${date}`;
 	}
 	return `${prefix} ${text}`.replace(/\s+$/, "");
+}
+
+export function setLineDue(raw: string, due: string | null): string | null {
+	return setLineDate(raw, DUE_RE, "\u{1F4C5}", due);
+}
+
+export function setLineDeadline(raw: string, deadline: string | null): string | null {
+	return setLineDate(raw, DEADLINE_RE, "\u{23F0}", deadline);
 }
 
 /** Star and someday are mutually exclusive — adding one clears the other. */

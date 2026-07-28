@@ -21,6 +21,7 @@ import {
 import {
 	moveTaskToFile,
 	setTaskChecked,
+	setTaskDeadline,
 	setTaskDue,
 	toggleTaskSomeday,
 	toggleTaskStar,
@@ -301,6 +302,7 @@ export class TasksPlusView extends ItemView {
 				onToggle: (t) => void setTaskChecked(this.app, t, !t.checked),
 				onStar: (t) => void toggleTaskStar(this.app, t),
 				onSchedule: (t) => this.openScheduler(t),
+				onDeadline: (t) => this.openDeadline(t),
 				onSomeday: (t) => void toggleTaskSomeday(this.app, t),
 				onMove: (t) => this.openMover(t),
 				onJump: (t) => void this.jumpToSource(t),
@@ -342,6 +344,15 @@ export class TasksPlusView extends ItemView {
 			case "s":
 				if (task) this.openScheduler(task);
 				break;
+			case "d":
+				if (task) this.openDeadline(task);
+				break;
+			case "m":
+				if (task) this.openMover(task);
+				break;
+			case "Enter":
+				if (task) void this.jumpToSource(task);
+				break;
 			default:
 				return;
 		}
@@ -366,6 +377,16 @@ export class TasksPlusView extends ItemView {
 			task.due,
 			this.plugin.settings.firstDayOfWeek,
 			(iso) => void setTaskDue(this.app, task, iso)
+		).open();
+	}
+
+	private openDeadline(task: TaskItem): void {
+		new DateModal(
+			this.app,
+			task.deadline,
+			this.plugin.settings.firstDayOfWeek,
+			(iso) => void setTaskDeadline(this.app, task, iso),
+			"Deadline?"
 		).open();
 	}
 

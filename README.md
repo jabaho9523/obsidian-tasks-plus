@@ -21,12 +21,13 @@ Inline metadata, readable by humans and compatible with the emoji format of the 
 ```markdown
 - [ ] call mom 📅 2026-08-01
 - [ ] review draft ⏳ 2026-08-03
+- [ ] submit application ⏰ 2026-08-15
 - [x] pay rent 📅 2026-07-28 ✅ 2026-07-28
 - [ ] plan the autumn trip 💤
 - [ ] finish slides ⭐
 ```
 
-📅 due · ⏳ scheduled · ✅ done · ⭐ starred for Today · 💤 someday.
+📅 due · ⏳ scheduled · ⏰ deadline · ✅ done · ⭐ starred for Today · 💤 someday. Deadlines get their own chip that turns red as the day approaches; "report by fri" in capture sets one.
 
 ## The six views
 
@@ -39,7 +40,7 @@ Every open task lives in exactly one view (someday wins over starred, starred ov
 - **Someday** — marked 💤; resting until you wake it.
 - **Logbook** — done tasks, newest first, grouped by day.
 
-Keyboard, in any view: `j`/`k` navigate, `x` toggle done, `t` star, `s` schedule.
+Keyboard, in any view: `j`/`k` navigate, `x` toggle done, `t` star, `s` schedule, `d` deadline, `m` move, `Enter` open the source note. In the capture modal: `⌘T` star, `⌘S` someday — no mouse needed anywhere.
 
 ## Settings
 

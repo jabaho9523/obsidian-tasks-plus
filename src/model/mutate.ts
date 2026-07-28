@@ -4,6 +4,7 @@ import { todayISO } from "../util/date";
 import { TaskItem } from "./index";
 import {
 	setLineChecked,
+	setLineDeadline,
 	setLineDue,
 	toggleLineStar,
 	toggleLineSomeday,
@@ -46,6 +47,14 @@ export function setTaskChecked(app: App, task: TaskItem, checked: boolean): Prom
 
 export function setTaskDue(app: App, task: TaskItem, due: string | null): Promise<boolean> {
 	return editTaskLine(app, task, (raw) => setLineDue(raw, due));
+}
+
+export function setTaskDeadline(
+	app: App,
+	task: TaskItem,
+	deadline: string | null
+): Promise<boolean> {
+	return editTaskLine(app, task, (raw) => setLineDeadline(raw, deadline));
 }
 
 export function toggleTaskStar(app: App, task: TaskItem): Promise<boolean> {

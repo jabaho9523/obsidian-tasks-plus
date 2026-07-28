@@ -35,10 +35,13 @@ export const VIEW_ICONS: Record<ViewId, string> = {
 	logbook: "archive",
 };
 
-/** Earliest of due/scheduled — the date a task sorts and groups by. */
+/** Earliest of due/scheduled/deadline — the date a task sorts and groups by. */
 export function effectiveDate(t: TaskItem): string | null {
-	if (t.due && t.scheduled) return t.due < t.scheduled ? t.due : t.scheduled;
-	return t.due ?? t.scheduled;
+	const dates = [t.due, t.scheduled, t.deadline].filter(
+		(d): d is string => d !== null
+	);
+	if (dates.length === 0) return null;
+	return dates.reduce((a, b) => (a < b ? a : b));
 }
 
 /**
