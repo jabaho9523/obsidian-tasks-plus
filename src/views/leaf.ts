@@ -16,6 +16,8 @@ import {
 	counts,
 	effectiveDate,
 	projectTasks,
+	tagCounts,
+	tagGroups,
 	tasksFor,
 } from "../model/queries";
 import {
@@ -40,7 +42,10 @@ import { DateModal } from "./date-picker";
 import { ProjectPickerModal } from "./project-picker";
 import { renderTaskRow } from "./rows";
 
-type Selection = { kind: "view"; view: ViewId } | { kind: "project"; path: string };
+type Selection =
+	| { kind: "view"; view: ViewId }
+	| { kind: "project"; path: string }
+	| { kind: "tags"; tags: string[] };
 
 const EMPTY_STATES: Record<ViewId, string> = {
 	inbox: "Nothing to sort — your inbox is clear.",
@@ -55,6 +60,7 @@ export class TasksPlusView extends ItemView {
 	private selection: Selection = { kind: "view", view: "inbox" };
 	private cursor = 0;
 	private rows: TaskItem[] = [];
+	private collapsedGroups = new Set<ViewId>();
 	private today = todayISO();
 	private unsubscribe: (() => void) | null = null;
 	private dayTimer: number | null = null;
@@ -138,7 +144,42 @@ export class TasksPlusView extends ItemView {
 				this.render();
 			});
 		}
+		this.renderTags(rail, all);
 		this.renderTree(rail, all);
+	}
+
+	private renderTags(rail: HTMLElement, all: TaskItem[]): void {
+		const tags = tagCounts(all);
+		if (tags.size === 0) return;
+		const active = this.selection.kind === "tags" ? this.selection.tags : [];
+		rail.createDiv({ cls: "tasks-plus-tree-heading", text: "Tags" });
+		for (const [tag, count] of Array.from(tags.entries()).sort((a, b) =>
+			a[0].localeCompare(b[0])
+		)) {
+			const item = rail.createDiv({ cls: "tasks-plus-tree-item" });
+			if (active.includes(tag)) item.addClass("is-active");
+			const icon = item.createSpan({ cls: "tasks-plus-rail-icon" });
+			setIcon(icon, "tag");
+			item.createSpan({ cls: "tasks-plus-rail-label", text: `#${tag}` });
+			item.createSpan({
+				cls: "tasks-plus-rail-count",
+				text: String(count),
+			});
+			item.addEventListener("click", () => this.toggleTag(tag));
+		}
+	}
+
+	private toggleTag(tag: string): void {
+		const active = this.selection.kind === "tags" ? this.selection.tags : [];
+		const next = active.includes(tag)
+			? active.filter((t) => t !== tag)
+			: [...active, tag];
+		this.selection =
+			next.length > 0
+				? { kind: "tags", tags: next }
+				: { kind: "view", view: "inbox" };
+		this.cursor = 0;
+		this.render();
 	}
 
 	private renderTree(rail: HTMLElement, all: TaskItem[]): void {
@@ -224,10 +265,18 @@ export class TasksPlusView extends ItemView {
 
 		let title: string;
 		let icon: string;
+		let groups: { view: ViewId; tasks: TaskItem[] }[] | null = null;
 		if (this.selection.kind === "view") {
 			this.rows = tasksFor(this.selection.view, all, this.today);
 			title = VIEW_LABELS[this.selection.view];
 			icon = VIEW_ICONS[this.selection.view];
+		} else if (this.selection.kind === "tags") {
+			groups = tagGroups(all, this.selection.tags, this.today);
+			this.rows = groups
+				.filter((g) => !this.collapsedGroups.has(g.view))
+				.flatMap((g) => g.tasks);
+			title = this.selection.tags.map((t) => `#${t}`).join(" + ");
+			icon = "tag";
 		} else {
 			this.rows = projectTasks(all, this.selection.path);
 			title =
@@ -237,14 +286,17 @@ export class TasksPlusView extends ItemView {
 		}
 		this.cursor = Math.max(0, Math.min(this.cursor, this.rows.length - 1));
 
+		const total = groups
+			? groups.reduce((n, g) => n + g.tasks.length, 0)
+			: this.rows.length;
 		const header = content.createDiv({ cls: "tasks-plus-header" });
 		const headIcon = header.createSpan({ cls: "tasks-plus-header-icon" });
 		setIcon(headIcon, icon);
 		header.createSpan({ cls: "tasks-plus-header-title", text: title });
-		if (this.rows.length > 0) {
+		if (total > 0) {
 			header.createSpan({
 				cls: "tasks-plus-header-count",
-				text: String(this.rows.length),
+				text: String(total),
 			});
 		}
 		const capture = header.createEl("button", {
@@ -257,6 +309,17 @@ export class TasksPlusView extends ItemView {
 		});
 
 		const list = content.createDiv({ cls: "tasks-plus-list" });
+		if (groups !== null) {
+			if (groups.length === 0) {
+				list.createDiv({
+					cls: "tasks-plus-empty",
+					text: "No tasks carry this tag.",
+				});
+				return;
+			}
+			this.renderTagGroups(list, groups);
+			return;
+		}
 		if (this.rows.length === 0) {
 			const message =
 				this.selection.kind === "view"
@@ -275,6 +338,33 @@ export class TasksPlusView extends ItemView {
 			this.renderGrouped(list, groupLogbook(this.rows, this.today));
 		} else {
 			for (const task of this.rows) this.renderRow(list, task);
+		}
+	}
+
+	private renderTagGroups(
+		list: HTMLElement,
+		groups: { view: ViewId; tasks: TaskItem[] }[]
+	): void {
+		for (const group of groups) {
+			const collapsed = this.collapsedGroups.has(group.view);
+			const heading = list.createDiv({
+				cls: "tasks-plus-group-heading tasks-plus-group-toggle",
+			});
+			const chevron = heading.createSpan({ cls: "tasks-plus-rail-icon" });
+			setIcon(chevron, collapsed ? "chevron-right" : "chevron-down");
+			heading.createSpan({ text: VIEW_LABELS[group.view] });
+			heading.createSpan({
+				cls: "tasks-plus-rail-count",
+				text: String(group.tasks.length),
+			});
+			heading.addEventListener("click", () => {
+				if (collapsed) this.collapsedGroups.delete(group.view);
+				else this.collapsedGroups.add(group.view);
+				this.render();
+			});
+			if (!collapsed) {
+				for (const task of group.tasks) this.renderRow(list, task);
+			}
 		}
 	}
 

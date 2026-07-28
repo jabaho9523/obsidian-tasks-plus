@@ -80,6 +80,36 @@ export function projectTasks(all: TaskItem[], path: string): TaskItem[] {
 	return all.filter((t) => !t.checked && t.path === path);
 }
 
+/** Open-task count per tag, for the rail. */
+export function tagCounts(all: TaskItem[]): Map<string, number> {
+	const counts = new Map<string, number>();
+	for (const t of all) {
+		if (t.checked) continue;
+		for (const tag of t.tags) {
+			counts.set(tag, (counts.get(tag) ?? 0) + 1);
+		}
+	}
+	return counts;
+}
+
+/**
+ * Tasks carrying every selected tag, grouped by their primary view in
+ * rail order (Logbook included), each group sorted like its view.
+ */
+export function tagGroups(
+	all: TaskItem[],
+	tags: string[],
+	today: string
+): { view: ViewId; tasks: TaskItem[] }[] {
+	const matching = all.filter((t) => tags.every((tag) => t.tags.includes(tag)));
+	const groups: { view: ViewId; tasks: TaskItem[] }[] = [];
+	for (const view of VIEW_IDS) {
+		const tasks = tasksFor(view, matching, today);
+		if (tasks.length > 0) groups.push({ view, tasks });
+	}
+	return groups;
+}
+
 export function counts(all: TaskItem[], today: string): Record<ViewId, number> {
 	const out = {} as Record<ViewId, number>;
 	for (const id of VIEW_IDS) out[id] = tasksFor(id, all, today).length;

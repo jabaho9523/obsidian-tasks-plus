@@ -6,6 +6,7 @@ const STAR_RE = /\u{2B50}️?/u;
 const SOMEDAY_RE = /\u{1F4A4}️?/u;
 
 const LINE_RE = /^(\s*)([-*+]|\d+[.)])\s+\[(.)\]\s?(.*)$/;
+const TAG_RE = /#[\p{L}\p{N}_/-]*\p{L}[\p{L}\p{N}_/-]*/gu;
 
 export interface ParsedTask {
 	indent: string;
@@ -22,6 +23,8 @@ export interface ParsedTask {
 	doneDate: string | null;
 	starred: boolean;
 	someday: boolean;
+	/** Inline #tags, lowercased, without the leading #. Kept in the title. */
+	tags: string[];
 }
 
 export function parseTaskLine(raw: string): ParsedTask | null {
@@ -38,6 +41,9 @@ export function parseTaskLine(raw: string): ParsedTask | null {
 	const doneDate = DONE_RE.exec(text)?.[1] ?? null;
 	const starred = STAR_RE.test(text);
 	const someday = SOMEDAY_RE.test(text);
+	const tags = Array.from(
+		new Set((text.match(TAG_RE) ?? []).map((t) => t.slice(1).toLowerCase()))
+	);
 
 	const title = text
 		.replace(new RegExp(` ?${DUE_RE.source}`, "u"), "")
@@ -62,6 +68,7 @@ export function parseTaskLine(raw: string): ParsedTask | null {
 		doneDate,
 		starred,
 		someday,
+		tags,
 	};
 }
 

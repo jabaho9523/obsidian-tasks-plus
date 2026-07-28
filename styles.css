@@ -408,3 +408,17 @@
 	color: var(--text-faint);
 	font-size: var(--font-ui-smaller);
 }
+
+/* Tag groups */
+
+.tasks-plus-group-toggle {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	cursor: pointer;
+	user-select: none;
+}
+
+.tasks-plus-group-toggle:hover {
+	color: var(--text-normal);
+}
