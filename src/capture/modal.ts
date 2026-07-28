@@ -13,23 +13,39 @@ import { parseNaturalDate } from "./nl-dates";
 export async function captureToInbox(
 	app: App,
 	settings: TasksPlusSettings,
-	rawText: string
+	rawText: string,
+	starred = false,
+	someday = false
 ): Promise<{ title: string; due: string | null } | null> {
 	const parsed = parseNaturalDate(rawText, settings.firstDayOfWeek);
 	if (!parsed.title) return null;
 	const folder = settings.tasksFolder || "Tasks";
 	const inbox = await ensureNote(app, `${folder}/Inbox.md`);
-	await appendLine(app, inbox, buildTaskLine(parsed.title, parsed.due));
+	await appendLine(
+		app,
+		inbox,
+		buildTaskLine(parsed.title, parsed.due, starred, someday)
+	);
 	return { title: parsed.title, due: parsed.due };
 }
 
+/**
+ * Quick-capture modal. Without onInsert the task is appended to the
+ * Inbox; with it, the built task line is handed to the caller (used by
+ * the insert-task editor command to drop the line at the cursor).
+ */
 export class CaptureModal extends Modal {
 	private inputEl!: HTMLInputElement;
 	private previewEl!: HTMLElement;
+	private starred = false;
+	private someday = false;
+	private starBtn!: HTMLButtonElement;
+	private somedayBtn!: HTMLButtonElement;
 
 	constructor(
 		app: App,
-		private settings: TasksPlusSettings
+		private settings: TasksPlusSettings,
+		private onInsert?: (line: string) => void
 	) {
 		super(app);
 	}
@@ -44,7 +60,20 @@ export class CaptureModal extends Modal {
 			type: "text",
 			placeholder: "New task… try “call mom tomorrow”",
 		});
-		this.previewEl = contentEl.createDiv({ cls: "tasks-plus-capture-preview" });
+
+		const row = contentEl.createDiv({ cls: "tasks-plus-capture-row" });
+		this.previewEl = row.createDiv({ cls: "tasks-plus-capture-preview" });
+		const marks = row.createDiv({ cls: "tasks-plus-capture-marks" });
+		this.starBtn = this.markButton(marks, "star", "Star for Today", () => {
+			this.starred = !this.starred;
+			if (this.starred) this.someday = false;
+			this.renderPreview();
+		});
+		this.somedayBtn = this.markButton(marks, "moon", "Someday", () => {
+			this.someday = !this.someday;
+			if (this.someday) this.starred = false;
+			this.renderPreview();
+		});
 
 		this.inputEl.addEventListener("input", () => this.renderPreview());
 		this.inputEl.addEventListener("keydown", (e) => {
@@ -61,7 +90,22 @@ export class CaptureModal extends Modal {
 		this.contentEl.empty();
 	}
 
+	private markButton(
+		parent: HTMLElement,
+		icon: string,
+		label: string,
+		onClick: () => void
+	): HTMLButtonElement {
+		const btn = parent.createEl("button", { cls: "tasks-plus-icon-btn" });
+		btn.setAttribute("aria-label", label);
+		setIcon(btn, icon);
+		btn.addEventListener("click", onClick);
+		return btn;
+	}
+
 	private renderPreview(): void {
+		this.starBtn.toggleClass("is-active", this.starred);
+		this.somedayBtn.toggleClass("is-active", this.someday);
 		const parsed = parseNaturalDate(
 			this.inputEl.value,
 			this.settings.firstDayOfWeek
@@ -70,7 +114,9 @@ export class CaptureModal extends Modal {
 		if (!parsed.title) {
 			this.previewEl.createSpan({
 				cls: "tasks-plus-capture-hint",
-				text: "Lands in your Inbox. Enter to save.",
+				text: this.onInsert
+					? "Inserted at the cursor. Enter to save."
+					: "Lands in your Inbox. Enter to save.",
 			});
 			return;
 		}
@@ -89,7 +135,22 @@ export class CaptureModal extends Modal {
 	private async commit(): Promise<void> {
 		const text = this.inputEl.value;
 		try {
-			const saved = await captureToInbox(this.app, this.settings, text);
+			if (this.onInsert) {
+				const parsed = parseNaturalDate(text, this.settings.firstDayOfWeek);
+				if (!parsed.title) return;
+				this.close();
+				this.onInsert(
+					buildTaskLine(parsed.title, parsed.due, this.starred, this.someday)
+				);
+				return;
+			}
+			const saved = await captureToInbox(
+				this.app,
+				this.settings,
+				text,
+				this.starred,
+				this.someday
+			);
 			if (!saved) return;
 			this.close();
 			const due = saved.due ? ` · due ${formatHuman(saved.due)}` : "";

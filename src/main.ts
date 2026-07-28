@@ -48,6 +48,30 @@ export default class TasksPlusPlugin extends Plugin {
 		});
 
 		this.addCommand({
+			id: "insert-task",
+			name: "Insert task",
+			editorCallback: (editor) => {
+				new CaptureModal(this.app, this.settings, (line) => {
+					const cursor = editor.getCursor();
+					const current = editor.getLine(cursor.line);
+					if (current.trim() === "") {
+						editor.setLine(cursor.line, line);
+						editor.setCursor({ line: cursor.line, ch: line.length });
+					} else {
+						editor.replaceRange(`\n${line}`, {
+							line: cursor.line,
+							ch: current.length,
+						});
+						editor.setCursor({
+							line: cursor.line + 1,
+							ch: line.length,
+						});
+					}
+				}).open();
+			},
+		});
+
+		this.addCommand({
 			id: "open-sidebar",
 			name: "Open in sidebar",
 			callback: () => {
