@@ -146,6 +146,29 @@ function toggleMarker(
 	return `${prefix} ${text}`.replace(/\s+$/, "");
 }
 
+export function addLineTag(raw: string, tag: string): string | null {
+	const clean = normalizeTag(tag);
+	if (!clean) return null;
+	const parsed = parseTaskLine(raw);
+	if (!parsed) return null;
+	if (parsed.tags.includes(clean.toLowerCase())) return raw;
+	return `${raw.replace(/\s+$/, "")} #${clean}`;
+}
+
+export function removeLineTag(raw: string, tag: string): string | null {
+	const clean = normalizeTag(tag);
+	if (!clean) return null;
+	const re = new RegExp(
+		` ?#${clean.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\p{L}\\p{N}_/-])`,
+		"giu"
+	);
+	return raw.replace(re, "").replace(/\s+$/, "");
+}
+
+export function normalizeTag(tag: string): string {
+	return tag.trim().replace(/^#+/, "").replace(/\s+/g, "-");
+}
+
 export function toggleLineStar(raw: string): string | null {
 	return toggleMarker(raw, STAR_RE, "\u{2B50}", SOMEDAY_RE);
 }

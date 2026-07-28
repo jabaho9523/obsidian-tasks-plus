@@ -422,3 +422,33 @@
 .tasks-plus-group-toggle:hover {
 	color: var(--text-normal);
 }
+
+/* Tag modal */
+
+.tasks-plus-tag-current,
+.tasks-plus-tag-suggest {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-bottom: 10px;
+}
+
+.tasks-plus-tag-suggest {
+	margin-bottom: 0;
+	margin-top: 10px;
+}
+
+.tasks-plus-tag-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	font-size: var(--font-ui-smaller);
+}
+
+.tasks-plus-tag-chip.is-suggestion {
+	color: var(--text-muted);
+}
+
+.tasks-plus-tag-input {
+	width: 100%;
+}

@@ -93,15 +93,15 @@ export function tagCounts(all: TaskItem[]): Map<string, number> {
 }
 
 /**
- * Tasks carrying every selected tag, grouped by their primary view in
- * rail order (Logbook included), each group sorted like its view.
+ * Tasks carrying any of the selected tags (OR), grouped by their primary
+ * view in rail order (Logbook included), each group sorted like its view.
  */
 export function tagGroups(
 	all: TaskItem[],
 	tags: string[],
 	today: string
 ): { view: ViewId; tasks: TaskItem[] }[] {
-	const matching = all.filter((t) => tags.every((tag) => t.tags.includes(tag)));
+	const matching = all.filter((t) => tags.some((tag) => t.tags.includes(tag)));
 	const groups: { view: ViewId; tasks: TaskItem[] }[] = [];
 	for (const view of VIEW_IDS) {
 		const tasks = tasksFor(view, matching, today);

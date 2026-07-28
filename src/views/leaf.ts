@@ -21,7 +21,8 @@ import {
 	tasksFor,
 } from "../model/queries";
 import {
-	moveTaskToFile,
+	addTaskTag,
+	removeTaskTag,
 	setTaskChecked,
 	setTaskDeadline,
 	setTaskDue,
@@ -39,7 +40,7 @@ import {
 } from "../util/date";
 import { CaptureModal } from "../capture/modal";
 import { DateModal } from "./date-picker";
-import { ProjectPickerModal } from "./project-picker";
+import { TagModal } from "./tag-modal";
 import { renderTaskRow } from "./rows";
 
 type Selection =
@@ -394,7 +395,7 @@ export class TasksPlusView extends ItemView {
 				onSchedule: (t) => this.openScheduler(t),
 				onDeadline: (t) => this.openDeadline(t),
 				onSomeday: (t) => void toggleTaskSomeday(this.app, t),
-				onMove: (t) => this.openMover(t),
+				onTag: (t) => this.openTagger(t),
 				onJump: (t) => void this.jumpToSource(t),
 				onSelect: (t) => {
 					this.cursor = this.rows.indexOf(t);
@@ -437,8 +438,8 @@ export class TasksPlusView extends ItemView {
 			case "d":
 				if (task) this.openDeadline(task);
 				break;
-			case "m":
-				if (task) this.openMover(task);
+			case "g":
+				if (task) this.openTagger(task);
 				break;
 			case "Enter":
 				if (task) void this.jumpToSource(task);
@@ -480,10 +481,17 @@ export class TasksPlusView extends ItemView {
 		).open();
 	}
 
-	private openMover(task: TaskItem): void {
-		new ProjectPickerModal(this.app, this.plugin.index.tasksFolder(), (file) => {
-			void moveTaskToFile(this.app, task, file.path);
-		}).open();
+	private openTagger(task: TaskItem): void {
+		const vaultTags = Array.from(
+			tagCounts(this.plugin.index.all()).keys()
+		).sort();
+		new TagModal(
+			this.app,
+			task.tags,
+			vaultTags,
+			(tag) => void addTaskTag(this.app, task, tag),
+			(tag) => void removeTaskTag(this.app, task, tag)
+		).open();
 	}
 
 	private async jumpToSource(task: TaskItem): Promise<void> {

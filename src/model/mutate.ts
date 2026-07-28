@@ -3,6 +3,8 @@ import { PLUGIN_NAME } from "../constants";
 import { todayISO } from "../util/date";
 import { TaskItem } from "./index";
 import {
+	addLineTag,
+	removeLineTag,
 	setLineChecked,
 	setLineDeadline,
 	setLineDue,
@@ -55,6 +57,14 @@ export function setTaskDeadline(
 	deadline: string | null
 ): Promise<boolean> {
 	return editTaskLine(app, task, (raw) => setLineDeadline(raw, deadline));
+}
+
+export function addTaskTag(app: App, task: TaskItem, tag: string): Promise<boolean> {
+	return editTaskLine(app, task, (raw) => addLineTag(raw, tag));
+}
+
+export function removeTaskTag(app: App, task: TaskItem, tag: string): Promise<boolean> {
+	return editTaskLine(app, task, (raw) => removeLineTag(raw, tag));
 }
 
 export function toggleTaskStar(app: App, task: TaskItem): Promise<boolean> {

@@ -8,7 +8,7 @@ export interface RowCallbacks {
 	onSchedule: (task: TaskItem) => void;
 	onDeadline: (task: TaskItem) => void;
 	onSomeday: (task: TaskItem) => void;
-	onMove: (task: TaskItem) => void;
+	onTag: (task: TaskItem) => void;
 	onJump: (task: TaskItem) => void;
 	onSelect: (task: TaskItem) => void;
 }
@@ -96,7 +96,7 @@ export function renderTaskRow(
 		task.someday ? "Wake from Someday" : "Move to Someday",
 		() => cb.onSomeday(task)
 	);
-	actionButton(actions, "folder-input", "Move to project", () => cb.onMove(task));
+	actionButton(actions, "tag", "Tags", () => cb.onTag(task));
 	actionButton(actions, "arrow-up-right", "Open source note", () =>
 		cb.onJump(task)
 	);
