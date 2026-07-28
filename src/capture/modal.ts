@@ -1,4 +1,4 @@
-import { App, Modal, Notice, setIcon } from "obsidian";
+import { App, Modal, Notice, Platform, setIcon } from "obsidian";
 import { PLUGIN_NAME } from "../constants";
 import { TasksPlusSettings } from "../settings";
 import { buildTaskLine } from "../model/parse";
@@ -24,9 +24,9 @@ export async function captureToInbox(
 	await appendLine(
 		app,
 		inbox,
-		buildTaskLine(parsed.title, parsed.due, starred, someday)
+		buildTaskLine(parsed.title, parsed.due, starred, someday, parsed.deadline)
 	);
-	return { title: parsed.title, due: parsed.due };
+	return { title: parsed.title, due: parsed.due ?? parsed.deadline };
 }
 
 /**
@@ -64,15 +64,33 @@ export class CaptureModal extends Modal {
 		const row = contentEl.createDiv({ cls: "tasks-plus-capture-row" });
 		this.previewEl = row.createDiv({ cls: "tasks-plus-capture-preview" });
 		const marks = row.createDiv({ cls: "tasks-plus-capture-marks" });
-		this.starBtn = this.markButton(marks, "star", "Star for Today", () => {
+		const toggleStar = () => {
 			this.starred = !this.starred;
 			if (this.starred) this.someday = false;
 			this.renderPreview();
-		});
-		this.somedayBtn = this.markButton(marks, "moon", "Someday", () => {
+		};
+		const toggleSomeday = () => {
 			this.someday = !this.someday;
 			if (this.someday) this.starred = false;
 			this.renderPreview();
+		};
+		this.starBtn = this.markButton(marks, "star", "Star for Today", toggleStar);
+		this.somedayBtn = this.markButton(marks, "moon", "Someday", toggleSomeday);
+
+		// Keyboard-only marks: Mod+T star, Mod+S someday (modal scope
+		// wins over app hotkeys while open).
+		this.scope.register(["Mod"], "t", () => {
+			toggleStar();
+			return false;
+		});
+		this.scope.register(["Mod"], "s", () => {
+			toggleSomeday();
+			return false;
+		});
+		const mod = Platform.isMacOS ? "⌘" : "Ctrl+";
+		contentEl.createDiv({
+			cls: "tasks-plus-capture-keys",
+			text: `${mod}T star · ${mod}S someday · “by fri” sets a deadline`,
 		});
 
 		this.inputEl.addEventListener("input", () => this.renderPreview());
@@ -130,6 +148,14 @@ export class CaptureModal extends Modal {
 			setIcon(icon, "calendar");
 			chip.createSpan({ text: formatHuman(parsed.due) });
 		}
+		if (parsed.deadline) {
+			const chip = this.previewEl.createSpan({
+				cls: "tasks-plus-date-chip is-deadline",
+			});
+			const icon = chip.createSpan({ cls: "tasks-plus-chip-icon" });
+			setIcon(icon, "alarm-clock");
+			chip.createSpan({ text: formatHuman(parsed.deadline) });
+		}
 	}
 
 	private async commit(): Promise<void> {
@@ -140,7 +166,13 @@ export class CaptureModal extends Modal {
 				if (!parsed.title) return;
 				this.close();
 				this.onInsert(
-					buildTaskLine(parsed.title, parsed.due, this.starred, this.someday)
+					buildTaskLine(
+						parsed.title,
+						parsed.due,
+						this.starred,
+						this.someday,
+						parsed.deadline
+					)
 				);
 				return;
 			}
