@@ -1,4 +1,5 @@
-import { App, TFile, moment, normalizePath } from "obsidian";
+import { App, TFile, normalizePath } from "obsidian";
+import { moment } from "../util/time";
 import { BLOCK_END, BLOCK_START } from "../constants";
 import { TaskItem } from "../model/index";
 import { tasksFor } from "../model/queries";

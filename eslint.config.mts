@@ -24,6 +24,17 @@ export default tseslint.config(
 	},
 	...obsidianmd.configs.recommended,
 	{
+		// Parity with the community-plugin review lint.
+		files: ["src/**/*.ts"],
+		rules: {
+			"@typescript-eslint/no-unsafe-assignment": "error",
+			"@typescript-eslint/no-unsafe-argument": "error",
+			"@typescript-eslint/no-unsafe-call": "error",
+			"@typescript-eslint/no-unsafe-member-access": "error",
+			"@typescript-eslint/no-unsafe-return": "error",
+		},
+	},
+	{
 		// minAppVersion 1.7.2 predates the declarative settings renderer, so
 		// the tab must still implement the deprecated display().
 		files: ["src/settings-tab.ts"],

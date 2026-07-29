@@ -66,6 +66,10 @@ Works on desktop and mobile.
 
 No recurring tasks, priorities, time tracking, kanban, reminders, custom queries or filters, drag-and-drop reordering, or import bridges — the restraint is the product. Some of these may come in later milestones; most won't.
 
+## Privacy
+
+Everything is local — no network requests, no telemetry, nothing leaves the vault. With "Show tasks from the whole vault" on (the default), the plugin scans your markdown files' cached metadata to find checkboxes; turn it off and it only ever touches the tasks folder.
+
 ## License
 
 0BSD

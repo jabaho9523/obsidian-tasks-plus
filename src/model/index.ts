@@ -3,6 +3,7 @@ import {
 	CachedMetadata,
 	Plugin,
 	TFile,
+	TFolder,
 	debounce,
 	normalizePath,
 } from "obsidian";
@@ -70,14 +71,36 @@ export class TaskIndex {
 
 	async rebuildAll(): Promise<void> {
 		this.byPath.clear();
-		for (const file of this.app.vault.getMarkdownFiles()) {
+		for (const file of this.indexableFiles()) {
 			const cache = this.app.metadataCache.getFileCache(file);
 			if (!cache?.listItems?.some((li) => li.task !== undefined)) continue;
-			if (!this.isIndexable(file.path)) continue;
 			const data = await this.app.vault.cachedRead(file);
 			this.indexFile(file, data, cache);
 		}
 		this.notifyNow();
+	}
+
+	/**
+	 * With the vault-wide toggle off, only the tasks folder is walked —
+	 * the plugin never enumerates the rest of the vault.
+	 */
+	private indexableFiles(): TFile[] {
+		if (this.getSettings().vaultWideTasks) {
+			return this.app.vault.getMarkdownFiles();
+		}
+		const root = this.app.vault.getFolderByPath(this.tasksFolder());
+		if (!root) return [];
+		const files: TFile[] = [];
+		const visit = (folder: TFolder) => {
+			for (const child of folder.children) {
+				if (child instanceof TFolder) visit(child);
+				else if (child instanceof TFile && child.extension === "md") {
+					files.push(child);
+				}
+			}
+		};
+		visit(root);
+		return files;
 	}
 
 	all(): TaskItem[] {
