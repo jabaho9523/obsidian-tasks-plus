@@ -1,7 +1,7 @@
 {
 	"id": "tasks-plus",
 	"name": "Tasks Plus",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"minAppVersion": "1.7.2",
 	"description": "Calm GTD over plain markdown. Six fixed views — Inbox, Today, Upcoming, Anytime, Someday, Logbook — quick capture with natural-language dates. Your tasks stay ordinary checkboxes in your notes.",
 	"author": "Jacob Holm",

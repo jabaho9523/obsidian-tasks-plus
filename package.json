@@ -1,6 +1,6 @@
 {
 	"name": "tasks-plus",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "The calm GTD app over plain markdown. Six fixed views — Inbox, Today, Upcoming, Anytime, Someday, Logbook — quick capture with natural-language dates, and your tasks stay ordinary checkboxes in your notes.",
 	"main": "main.js",
 	"type": "module",
