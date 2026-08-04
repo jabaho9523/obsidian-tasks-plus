@@ -2,7 +2,6 @@ import {
 	App,
 	PluginSettingTab,
 	Setting,
-	SettingDefinitionItem,
 	normalizePath,
 	setIcon,
 } from "obsidian";
@@ -18,56 +17,6 @@ export class TasksPlusSettingTab extends PluginSettingTab {
 	constructor(app: App, plugin: TasksPlusPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
-	}
-
-	/**
-	 * Declarative definitions for the settings-search index (Obsidian 1.13+).
-	 * Rendering still happens in display() because minAppVersion predates
-	 * the declarative renderer; keys and defaults mirror the imperative UI.
-	 */
-	getSettingDefinitions(): SettingDefinitionItem[] {
-		return [
-			{
-				name: "Tasks folder",
-				desc: "Where captured tasks live. Folders inside it are areas, notes are projects.",
-				control: {
-					type: "text",
-					key: "tasksFolder",
-					defaultValue: DEFAULT_SETTINGS.tasksFolder,
-				},
-			},
-			{
-				name: "Show tasks from the whole vault",
-				desc: "Include checkboxes from any note, not just the tasks folder.",
-				control: {
-					type: "toggle",
-					key: "vaultWideTasks",
-					defaultValue: DEFAULT_SETTINGS.vaultWideTasks,
-				},
-			},
-			{
-				name: "First day of week",
-				desc: "Used when parsing “next week”.",
-				control: {
-					type: "dropdown",
-					key: "firstDayOfWeek",
-					defaultValue: String(DEFAULT_SETTINGS.firstDayOfWeek),
-					options: {
-						"1": "Monday",
-						"0": "Sunday",
-					},
-				},
-			},
-			{
-				name: "Today's tasks in the daily note",
-				desc: "Keep a managed block in today's daily note listing Today's tasks.",
-				control: {
-					type: "toggle",
-					key: "dailyNoteBlock",
-					defaultValue: DEFAULT_SETTINGS.dailyNoteBlock,
-				},
-			},
-		];
 	}
 
 	display(): void {
