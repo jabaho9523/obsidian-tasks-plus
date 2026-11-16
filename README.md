@@ -2,7 +2,7 @@
 
 The calm GTD app inside Obsidian. Six fixed views over your plain-markdown checkboxes — no database, no query language, no configuration maze. If you've used Things, you know the feel.
 
-This is v0.1.0, the first milestone. It's the native core: views, capture, dates. Screenshots and the community-directory listing come later — right now this is for people who build their plugins from source.
+Install it from Obsidian's community plugins directory.
 
 ## What it does
 
@@ -54,11 +54,8 @@ Row action buttons stay visible in Inbox for quick sorting; in every other view 
 
 ## Installation
 
-Not yet in the community directory. Manual install:
-
-1. Run `npm install && npm run build`
-2. Copy `main.js`, `manifest.json`, and `styles.css` into your vault at `.obsidian/plugins/tasks-plus/`
-3. Reload Obsidian and enable the plugin under **Settings → Community plugins**
+1. Open **Settings → Community plugins → Browse**.
+2. Search for **Tasks Plus**, then **Install** and **Enable**.
 
 Works on desktop and mobile.
 
@@ -69,6 +66,17 @@ No recurring tasks, priorities, time tracking, kanban, reminders, custom queries
 ## Privacy
 
 Everything is local — no network requests, no telemetry, nothing leaves the vault. With "Show tasks from the whole vault" on (the default), the plugin scans your markdown files' cached metadata to find checkboxes; turn it off and it only ever touches the tasks folder.
+
+## Plus Plugin Family
+
+Part of the **Plus Plugin Family** for Obsidian — free, open-source, local-first:
+
+- **[Paste Plus](https://github.com/jabaho9523/obsidian-paste-plus)** — Smart paste: URLs become titled links, images get clean filenames, HTML converts to markdown.
+- **[Vault Plus](https://github.com/jabaho9523/obsidian-vault-plus)** — Vault health dashboard: find and fix orphans, broken links, empty notes, duplicates, and more.
+- **[Link Plus](https://github.com/jabaho9523/obsidian-link-plus)** — Find every unlinked mention in your vault and convert them to wikilinks — one click or batch.
+- **[Meetings Plus](https://github.com/jabaho9523/obsidian-meetings-plus)** — Subscribe to calendars and create pre-filled meeting notes in one click. ICS-based, privacy-first.
+- **Tasks Plus** — Calm GTD over plain markdown: Inbox, Today, Upcoming, Anytime, Someday, Logbook.
+- **[Assist Plus](https://github.com/jabaho9523/obsidian-assist-plus)** — Chat with Claude on your own API key, with strict control over what it sees and changes.
 
 ## License
 
