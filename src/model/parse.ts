@@ -7,6 +7,7 @@ const SOMEDAY_RE = /\u{1F4A4}️?/u;
 
 const LINE_RE = /^(\s*)([-*+]|\d+[.)])\s+\[(.)\]\s?(.*)$/;
 const TAG_RE = /#[\p{L}\p{N}_/-]*\p{L}[\p{L}\p{N}_/-]*/gu;
+const BLOCK_ID_RE = /\s+\^([A-Za-z0-9-]+)\s*$/;
 
 export interface ParsedTask {
 	indent: string;
@@ -25,6 +26,20 @@ export interface ParsedTask {
 	someday: boolean;
 	/** Inline #tags, lowercased, without the leading #. Kept in the title. */
 	tags: string[];
+	/** Trailing ^block-id, without the caret. Not part of the title. */
+	blockId: string | null;
+}
+
+/** Obsidian only honours a block id when it is the last thing on the line. */
+export function splitBlockId(text: string): { body: string; blockId: string | null } {
+	const m = BLOCK_ID_RE.exec(text);
+	if (!m) return { body: text, blockId: null };
+	return { body: text.slice(0, m.index), blockId: m[1] ?? null };
+}
+
+function withBlockId(line: string, blockId: string | null): string {
+	const trimmed = line.replace(/\s+$/, "");
+	return blockId ? `${trimmed} ^${blockId}` : trimmed;
 }
 
 export function parseTaskLine(raw: string): ParsedTask | null {
@@ -45,7 +60,8 @@ export function parseTaskLine(raw: string): ParsedTask | null {
 		new Set((text.match(TAG_RE) ?? []).map((t) => t.slice(1).toLowerCase()))
 	);
 
-	const title = text
+	const { body, blockId } = splitBlockId(text);
+	const title = body
 		.replace(new RegExp(` ?${DUE_RE.source}`, "u"), "")
 		.replace(new RegExp(` ?${SCHEDULED_RE.source}`, "u"), "")
 		.replace(new RegExp(` ?${DEADLINE_RE.source}`, "u"), "")
@@ -69,6 +85,7 @@ export function parseTaskLine(raw: string): ParsedTask | null {
 		starred,
 		someday,
 		tags,
+		blockId,
 	};
 }
 
@@ -92,10 +109,11 @@ export function setLineChecked(raw: string, checked: boolean, doneISO: string): 
 	const m = LINE_RE.exec(raw);
 	if (!m) return null;
 	const prefix = `${m[1] ?? ""}${m[2] ?? "-"} [${checked ? "x" : " "}]`;
-	let text = m[4] ?? "";
+	const { body, blockId } = splitBlockId(m[4] ?? "");
+	let text = body;
 	text = text.replace(new RegExp(` ?${DONE_RE.source}`, "u"), "");
 	if (checked) text = `${text.replace(/\s+$/, "")} \u{2705} ${doneISO}`;
-	return `${prefix} ${text}`.replace(/\s+$/, "");
+	return withBlockId(`${prefix} ${text}`, blockId);
 }
 
 function setLineDate(
@@ -107,7 +125,8 @@ function setLineDate(
 	const m = LINE_RE.exec(raw);
 	if (!m) return null;
 	const prefix = `${m[1] ?? ""}${m[2] ?? "-"} [${m[3] ?? " "}]`;
-	let text = m[4] ?? "";
+	const { body, blockId } = splitBlockId(m[4] ?? "");
+	let text = body;
 	if (dateRe.test(text)) {
 		text = date
 			? text.replace(dateRe, `${emoji} ${date}`)
@@ -115,7 +134,7 @@ function setLineDate(
 	} else if (date) {
 		text = `${text.replace(/\s+$/, "")} ${emoji} ${date}`;
 	}
-	return `${prefix} ${text}`.replace(/\s+$/, "");
+	return withBlockId(`${prefix} ${text}`, blockId);
 }
 
 export function setLineDue(raw: string, due: string | null): string | null {
@@ -136,14 +155,15 @@ function toggleMarker(
 	const m = LINE_RE.exec(raw);
 	if (!m) return null;
 	const prefix = `${m[1] ?? ""}${m[2] ?? "-"} [${m[3] ?? " "}]`;
-	let text = m[4] ?? "";
+	const { body, blockId } = splitBlockId(m[4] ?? "");
+	let text = body;
 	if (markerRe.test(text)) {
 		text = text.replace(new RegExp(` ?${markerRe.source}`, "u"), "");
 	} else {
 		text = text.replace(new RegExp(` ?${otherRe.source}`, "u"), "");
 		text = `${text.replace(/\s+$/, "")} ${marker}`;
 	}
-	return `${prefix} ${text}`.replace(/\s+$/, "");
+	return withBlockId(`${prefix} ${text}`, blockId);
 }
 
 export function addLineTag(raw: string, tag: string): string | null {
@@ -152,7 +172,8 @@ export function addLineTag(raw: string, tag: string): string | null {
 	const parsed = parseTaskLine(raw);
 	if (!parsed) return null;
 	if (parsed.tags.includes(clean.toLowerCase())) return raw;
-	return `${raw.replace(/\s+$/, "")} #${clean}`;
+	const { body, blockId } = splitBlockId(raw);
+	return withBlockId(`${body.replace(/\s+$/, "")} #${clean}`, blockId);
 }
 
 export function removeLineTag(raw: string, tag: string): string | null {
