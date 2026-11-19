@@ -3,6 +3,9 @@ export interface TasksPlusSettings {
 	vaultWideTasks: boolean;
 	firstDayOfWeek: number;
 	dailyNoteBlock: boolean;
+	showWhatsNew: boolean;
+	/** Version whose "What's new" was last shown; "" until the first load */
+	lastShownVersion: string;
 }
 
 export const DEFAULT_SETTINGS: TasksPlusSettings = {
@@ -10,4 +13,6 @@ export const DEFAULT_SETTINGS: TasksPlusSettings = {
 	vaultWideTasks: true,
 	firstDayOfWeek: 1,
 	dailyNoteBlock: false,
+	showWhatsNew: true,
+	lastShownVersion: "",
 };

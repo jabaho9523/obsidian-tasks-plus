@@ -13,10 +13,19 @@ import { CaptureModal, captureToInbox } from "./capture/modal";
 import { TasksPlusView } from "./views/leaf";
 import { updateDailyNote } from "./notes/daily-note";
 import { formatHuman } from "./util/date";
+import releaseNotes from "release-notes";
+import { WhatsNewModal } from "./views/whats-new-modal";
+import {
+	decideOnStartup,
+	majorMinor,
+	notesBetween,
+	notesForCurrentLine,
+} from "./whats-new/versions";
 
 export default class TasksPlusPlugin extends Plugin {
 	settings!: TasksPlusSettings;
 	index!: TaskIndex;
+	private hadSavedData = false;
 
 	private dailyNoteRefresh = debounce(
 		() => void this.refreshDailyNote(),
@@ -96,13 +105,52 @@ export default class TasksPlusPlugin extends Plugin {
 		this.registerObsidianProtocolHandler("tasks-plus/capture", uriCapture);
 		this.registerObsidianProtocolHandler("tasks-plus", uriCapture);
 
+		this.addCommand({
+			id: "show-whats-new",
+			name: "Show what's new",
+			callback: () => {
+				const current = this.manifest.version;
+				new WhatsNewModal(
+					this.app,
+					majorMinor(current),
+					notesForCurrentLine(releaseNotes, current)
+				).open();
+			},
+		});
+
 		this.addSettingTab(new TasksPlusSettingTab(this.app, this));
 
 		this.index.onChange(() => this.dailyNoteRefresh());
 
 		this.app.workspace.onLayoutReady(() => {
 			void this.index.rebuildAll();
+			void this.showWhatsNewAfterUpdate();
 		});
+	}
+
+	private async showWhatsNewAfterUpdate(): Promise<void> {
+		const current = this.manifest.version;
+		const stored = this.settings.lastShownVersion;
+		const decision = decideOnStartup(
+			stored,
+			current,
+			this.settings.showWhatsNew,
+			this.hadSavedData
+		);
+		if (decision.show) {
+			// No stored version: an upgrade from before the window existed.
+			const notes =
+				stored === ""
+					? notesForCurrentLine(releaseNotes, current)
+					: notesBetween(releaseNotes, stored, current);
+			if (notes.length > 0) {
+				new WhatsNewModal(this.app, majorMinor(current), notes).open();
+			}
+		}
+		if (decision.store !== null) {
+			this.settings.lastShownVersion = decision.store;
+			await this.saveSettings();
+		}
 	}
 
 	async refreshDailyNote(): Promise<void> {
@@ -147,6 +195,7 @@ export default class TasksPlusPlugin extends Plugin {
 
 	async loadSettings(): Promise<void> {
 		const loaded = (await this.loadData()) as Partial<TasksPlusSettings> | null;
+		this.hadSavedData = loaded !== null && loaded !== undefined;
 		this.settings = { ...DEFAULT_SETTINGS, ...(loaded ?? {}) };
 	}
 

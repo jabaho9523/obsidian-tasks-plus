@@ -102,6 +102,20 @@ export class TasksPlusSettingTab extends PluginSettingTab {
 					});
 			});
 
+		new Setting(containerEl)
+			.setName("Show what's new after updates")
+			.setDesc(
+				"Open the release notes once after an update to a new minor version."
+			)
+			.addToggle((toggle) => {
+				toggle
+					.setValue(this.plugin.settings.showWhatsNew)
+					.onChange(async (value) => {
+						this.plugin.settings.showWhatsNew = value;
+						await this.plugin.saveSettings();
+					});
+			});
+
 		const capture = new Setting(containerEl)
 			.setName("Quick capture")
 			.setDesc(
