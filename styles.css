@@ -472,3 +472,59 @@
 .tasks-plus-tag-input {
 	width: 100%;
 }
+
+.tasks-plus-whats-new-notes {
+	max-height: 60vh;
+	overflow-y: auto;
+}
+
+.tasks-plus-whats-new-notes h3 {
+	margin-top: 1.2em;
+	margin-bottom: 0.4em;
+}
+
+.tasks-plus-whats-new-notes h3:first-child {
+	margin-top: 0;
+}
+
+.tasks-plus-whats-new-notes details {
+	margin-top: 0.8em;
+}
+
+.tasks-plus-whats-new-notes summary {
+	cursor: pointer;
+	font-weight: var(--font-semibold);
+}
+
+.tasks-plus-whats-new-support {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px 16px;
+	margin-top: 1em;
+	padding-top: 1em;
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+.tasks-plus-whats-new-support p {
+	margin: 0;
+}
+
+.tasks-plus-coffee-button {
+	flex-shrink: 0;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	background-color: #ffdd00;
+	color: #000000;
+	font-weight: var(--font-semibold);
+}
+
+.tasks-plus-coffee-button:hover {
+	background-color: #ffe94d;
+}
+
+.tasks-plus-coffee-icon {
+	display: inline-flex;
+}

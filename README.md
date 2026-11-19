@@ -51,6 +51,11 @@ Row action buttons stay visible in Inbox for quick sorting; in every other view 
 - Show tasks from the whole vault (default on)
 - First day of week
 - Today's tasks in the daily note (default off)
+- Show what's new after updates (default on) — see [What's new window](#whats-new-window)
+
+## What's new window
+
+After Tasks Plus updates to a new minor version (0.2.0, 0.3.0), a window shows the release notes once, with a link to support the plugin. Patch updates and first installs don't open it; the first update from a version before the window existed does. The command **Show what's new** opens it any time. Turn it off with **Show what's new after updates**. The notes are bundled with the plugin, so the window makes no network calls.
 
 ## Installation
 
