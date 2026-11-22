@@ -4,8 +4,8 @@ export interface TasksPlusSettings {
 	firstDayOfWeek: number;
 	dailyNoteBlock: boolean;
 	showWhatsNew: boolean;
-	/** Version whose "What's new" was last shown; "" until the first load */
-	lastShownVersion: string;
+	/** Written by 0.2.0. Now only read, as the fallback when this device has stored no version */
+	lastShownVersion?: string;
 }
 
 export const DEFAULT_SETTINGS: TasksPlusSettings = {
@@ -14,5 +14,4 @@ export const DEFAULT_SETTINGS: TasksPlusSettings = {
 	firstDayOfWeek: 1,
 	dailyNoteBlock: false,
 	showWhatsNew: true,
-	lastShownVersion: "",
 };

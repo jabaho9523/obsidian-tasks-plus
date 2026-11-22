@@ -55,7 +55,7 @@ Row action buttons stay visible in Inbox for quick sorting; in every other view 
 
 ## What's new window
 
-After Tasks Plus updates to a new minor version (0.2.0, 0.3.0), a window shows the release notes once, with a link to support the plugin. Patch updates and first installs don't open it; the first update from a version before the window existed does. The command **Show what's new** opens it any time. Turn it off with **Show what's new after updates**. The notes are bundled with the plugin, so the window makes no network calls.
+After an update with notable changes, a window shows the release notes once on each device, with a link to support the plugin. It only opens in the first 3 days after the update reaches the device. Other updates and first installs don't open it. The notes are always under **Settings → Tasks Plus → Release notes**, and the command **Show release notes** opens them too. Turn the window off with **Show what's new after updates**. The notes are bundled with the plugin, so the window makes no network calls.
 
 ## Installation
 

@@ -24,6 +24,13 @@ export class TasksPlusSettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
+			.setName("Release notes")
+			.setDesc("See what changed in recent updates.")
+			.addButton((b) =>
+				b.setButtonText("Show").onClick(() => this.plugin.showReleaseNotes())
+			);
+
+		new Setting(containerEl)
 			.setName("Tasks folder")
 			.setDesc(
 				"Where captured tasks live. Folders inside it are areas, notes are projects."
@@ -105,7 +112,7 @@ export class TasksPlusSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName("Show what's new after updates")
 			.setDesc(
-				"Open the release notes once after an update to a new minor version."
+				"Open the release notes once on this device, right after an update with notable changes."
 			)
 			.addToggle((toggle) => {
 				toggle

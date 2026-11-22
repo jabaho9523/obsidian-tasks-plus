@@ -5,7 +5,12 @@ import {
 	WorkspaceLeaf,
 	debounce,
 } from "obsidian";
-import { PLUGIN_NAME, RIBBON_ICON, VIEW_TYPE_TASKS_PLUS } from "./constants";
+import {
+	PLUGIN_NAME,
+	RIBBON_ICON,
+	VIEW_TYPE_TASKS_PLUS,
+	WHATS_NEW_STORAGE_KEY,
+} from "./constants";
 import { DEFAULT_SETTINGS, TasksPlusSettings } from "./settings";
 import { TasksPlusSettingTab } from "./settings-tab";
 import { TaskIndex } from "./model/index";
@@ -15,12 +20,8 @@ import { updateDailyNote } from "./notes/daily-note";
 import { formatHuman } from "./util/date";
 import releaseNotes from "release-notes";
 import { WhatsNewModal } from "./views/whats-new-modal";
-import {
-	decideOnStartup,
-	majorMinor,
-	notesBetween,
-	notesForCurrentLine,
-} from "./whats-new/versions";
+import { majorMinor, notesForCurrentLine } from "./whats-new/versions";
+import { whatsNewOnStartup } from "./whats-new/startup";
 
 export default class TasksPlusPlugin extends Plugin {
 	settings!: TasksPlusSettings;
@@ -107,15 +108,8 @@ export default class TasksPlusPlugin extends Plugin {
 
 		this.addCommand({
 			id: "show-whats-new",
-			name: "Show what's new",
-			callback: () => {
-				const current = this.manifest.version;
-				new WhatsNewModal(
-					this.app,
-					majorMinor(current),
-					notesForCurrentLine(releaseNotes, current)
-				).open();
-			},
+			name: "Show release notes",
+			callback: () => this.showReleaseNotes(),
 		});
 
 		this.addSettingTab(new TasksPlusSettingTab(this.app, this));
@@ -129,28 +123,25 @@ export default class TasksPlusPlugin extends Plugin {
 	}
 
 	private async showWhatsNewAfterUpdate(): Promise<void> {
-		const current = this.manifest.version;
-		const stored = this.settings.lastShownVersion;
-		const decision = decideOnStartup(
-			stored,
-			current,
-			this.settings.showWhatsNew,
-			this.hadSavedData
+		const notes = await whatsNewOnStartup(
+			this,
+			WHATS_NEW_STORAGE_KEY,
+			this.settings,
+			this.hadSavedData,
+			releaseNotes
 		);
-		if (decision.show) {
-			// No stored version: an upgrade from before the window existed.
-			const notes =
-				stored === ""
-					? notesForCurrentLine(releaseNotes, current)
-					: notesBetween(releaseNotes, stored, current);
-			if (notes.length > 0) {
-				new WhatsNewModal(this.app, majorMinor(current), notes).open();
-			}
+		if (notes.length > 0) {
+			new WhatsNewModal(this.app, majorMinor(this.manifest.version), notes).open();
 		}
-		if (decision.store !== null) {
-			this.settings.lastShownVersion = decision.store;
-			await this.saveSettings();
-		}
+	}
+
+	showReleaseNotes(): void {
+		const current = this.manifest.version;
+		new WhatsNewModal(
+			this.app,
+			majorMinor(current),
+			notesForCurrentLine(releaseNotes, current)
+		).open();
 	}
 
 	async refreshDailyNote(): Promise<void> {
