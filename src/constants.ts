@@ -2,6 +2,9 @@ export const PLUGIN_NAME = "Tasks Plus";
 export const VIEW_TYPE_TASKS_PLUS = "tasks-plus-view";
 export const RIBBON_ICON = "list-todo";
 
+/** Device-local storage key for the version whose "What's new" was decided */
+export const WHATS_NEW_STORAGE_KEY = "tasks-plus-whats-new";
+
 export const BLOCK_START = "<!-- tasks-plus:start -->";
 export const BLOCK_END = "<!-- tasks-plus:end -->";
 
